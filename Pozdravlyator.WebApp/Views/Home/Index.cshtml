@@ -1,8 +1,58 @@
-﻿@{
+﻿@model List<Pozdravlyator.WebApp.Models.MonthWithUsersViewModel>
+@{
     ViewData["Title"] = "Home Page";
 }
+<style>
+    .month-wrap{
+        overflow: hidden;
+        box-shadow: 0 0 3px #0000006b;
+        padding: 0 15px 15px 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+    }
+    .month{
+        margin-left:-15px;
+        width:calc(100% + 30px);
+        text-align:center;
+        font-weight:bold;
+        color: #fff;
+        padding:3px 7px;
+        margin-bottom: 15px;
+    }
+    .user-wrap{
+        overflow:hidden;
+        border-radius: 8px;
+        position:relative;
+        padding: 3px 7px;
+        background: transparent;
+        display:flex;
+        justify-content:space-between;
+        margin-bottom: 5px;
+    }
+    .user-wrap-bg{
+        z-index:-1;
+        opacity:0.2;
+        position:absolute;
+        width:100%;
+        height:100%;
+        left:0;
+        top:0;
+    }
+</style>
+<div>
+    @foreach (var month in Model)
+    {
+        <div class="month-wrap" style="border:1px @month.Color solid;">
+            <div class="month" style="background: @month.Color;">@month.Month</div>
+            @foreach (var user in month.Users)
+            {
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+                <div class="user-wrap" style="@(user.IsBirthdayToday() ? "border-right:3px gold solid; border-left:3px gold solid;" : "")">
+                    <div class="user-wrap-bg" style="background: @month.Color;"></div>
+                    <div>@user.Birthday.ToString("dd.MM.yyyy") @user.GetFullName()</div>
+                    <a asp-area="" asp-controller="Home" asp-action="Edit" asp-route-id="@user.Id">Edit</a>
+                </div>
+            }
+        </div>
+    }
 </div>

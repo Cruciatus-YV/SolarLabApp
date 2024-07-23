@@ -1,0 +1,5 @@
+﻿@model Pozdravlyator.Domain.User
+@{
+    ViewData["Title"] = "Edit " + Model.GetFullName();
+}
+    <div>@Model.GetFullName() @Model.Birthday.ToString("dd.MM.yyyy")</div>
