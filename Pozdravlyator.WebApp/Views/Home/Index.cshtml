@@ -49,8 +49,12 @@
 
                 <div class="user-wrap" style="@(user.IsBirthdayToday() ? "border-right:3px gold solid; border-left:3px gold solid;" : "")">
                     <div class="user-wrap-bg" style="background: @month.Color;"></div>
-                    <div>@user.Birthday.ToString("dd.MM.yyyy") @user.GetFullName()</div>
+                    <div>@user.BirthdayString @user.GetFullName()</div>
                     <a asp-area="" asp-controller="Home" asp-action="Edit" asp-route-id="@user.Id">Edit</a>
+                    <form action="/home/Delete" method="post">
+                        <input name="Id" value="@user.Id"/>
+                        <button type="submit">Удалить</button>
+                    </form>
                 </div>
             }
         </div>

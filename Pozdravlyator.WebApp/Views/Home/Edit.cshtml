@@ -1,5 +1,28 @@
-﻿@model Pozdravlyator.Domain.User
+﻿@model Pozdravlyator.WebApp.Models.UserViewModel
 @{
     ViewData["Title"] = "Edit " + Model.GetFullName();
 }
-    <div>@Model.GetFullName() @Model.Birthday.ToString("dd.MM.yyyy")</div>
+<form action="/home/Edit" method="post">
+    <input hidden asp-for="Id" />
+    <div>
+        <label>Имя</label>
+        <input type="text" placeholder="Введите имя" asp-for="FirstName" />
+        <span asp-validation-for="FirstName"></span>
+    </div>
+    <div>
+        <label>Фамилия</label>
+        <input type="text" placeholder="Введите фамилию" asp-for="LastName" />
+        <span asp-validation-for="LastName"></span>
+    </div>
+    <div>
+        <label>День рождения</label>
+        <input type="text" placeholder="Введите дату" asp-for="BirthdayString" />
+        <span asp-validation-for="BirthdayString"></span>
+    </div>
+    <div>
+        <label>Адрес</label>
+        <input type="text" placeholder="Введите адрес" asp-for="Adress" />
+        <span asp-validation-for="Adress"></span>
+    </div>
+    <button type="submit">Сохранить</button>
+</form>

@@ -3,6 +3,7 @@ using Pozdravlyator.Domain;
 using Pozdravlyator.WebApp.Models;
 using Pozdravlyator.WebApp.Repository.Interfaces;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace Pozdravlyator.WebApp.Controllers
 {
@@ -68,7 +69,15 @@ namespace Pozdravlyator.WebApp.Controllers
                 {
                     Month = GetMonthName(x.Key),
                     Color = GetColor(x.Key),
-                    Users = x.ToList(),
+                    Users = x.Select(user => new UserViewModel
+                    {
+                        Id = user.Id,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        BirthdayString = user.Birthday.ToString("dd.MM.yyyy"),
+                        Adress = user.Adress,
+
+                    }).ToList(),
                 };
             }).ToList();
             return View(result);
@@ -76,13 +85,46 @@ namespace Pozdravlyator.WebApp.Controllers
         public IActionResult Edit(int id) 
         {
             var user = _userRepository.GetById(id);
-            return View(user);
+            var model = new UserViewModel 
+            { 
+                Id = user.Id, 
+                FirstName = user.FirstName, 
+                LastName = user.LastName,
+                BirthdayString = user.Birthday.ToString("dd.MM.yyyy"),
+                Adress = user.Adress,
+            };
+            return View(model);
+        }
+        [HttpPost]
+        public IActionResult Edit(UserViewModel model) 
+        {
+            var user = _userRepository.GetById(model.Id);
+            var isBirthdayCorrect = DateTime.TryParseExact(model.BirthdayString, "dd.MM.yyyy", null, DateTimeStyles.None, out var birthday);
+            
+            if (!isBirthdayCorrect)
+            {
+                ModelState.First(x => x.Key == nameof(model.BirthdayString)).Value.Errors.Add("Неверный формат даты. День.Месяц.Год");
+            }
+            if (!ModelState.IsValid) 
+                return View(model);
+            user.FirstName = model.FirstName;
+            user.LastName = model.LastName;
+            user.Birthday = birthday;
+            user.Adress = model.Adress;
+            _userRepository.Update(user);
+            return Redirect("/");
+        }
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+            _userRepository.Delete(id);
+            return Redirect("/");
         }
         private string GetColor(int month)
         {
             var currentMonth = DateTime.UtcNow.Month;
             if (month < currentMonth) return "#f00";
-            else if (month == currentMonth) return "#54e31c";
+            else if (month == currentMonth) return "#1ce3ad";
             else if (month == currentMonth + 1) return "#c867cd";
             else return "#979797";
         }

@@ -29,6 +29,10 @@ namespace Pozdravlyator.WebApp.Repository
             _appDbContext.Users.Update(user);
             _appDbContext.SaveChanges();
         }
-
+        public void Delete(int id)
+        {
+            _appDbContext.Users.Remove(_appDbContext.Users.FirstOrDefault(x => x.Id == id));
+            _appDbContext.SaveChanges();
+        }
     }
 }

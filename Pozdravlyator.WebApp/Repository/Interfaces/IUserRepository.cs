@@ -8,6 +8,7 @@ namespace Pozdravlyator.WebApp.Repository.Interfaces
         List<User> GetAll();
         void Create(User user);
         void Update(User user);
+        void Delete(int id);
         
     }
 }
