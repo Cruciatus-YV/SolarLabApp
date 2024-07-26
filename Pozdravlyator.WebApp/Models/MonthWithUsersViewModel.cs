@@ -6,6 +6,6 @@ namespace Pozdravlyator.WebApp.Models
     {
         public string Month { get; set; }
         public string Color { get; set; }
-        public List<User> Users { get; set; }
+        public List<UserViewModel> Users { get; set; }
     }
 }
