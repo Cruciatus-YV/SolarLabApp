@@ -1,6 +1,6 @@
 ﻿@model Pozdravlyator.WebApp.Models.UserViewModel
 @{
-    ViewData["Title"] = "Edit " + Model.GetFullName();
+    ViewData["Title"] = "Новая запись";
 }
 <style>
     .error{
@@ -8,7 +8,7 @@
         font-size:12px;
     }
 </style>
-<form action="/home/Edit" method="post">
+<form action="/home/Add" method="post">
     <input hidden asp-for="Id" />
     <div class="form-group mb-2">
         <label>Имя</label>

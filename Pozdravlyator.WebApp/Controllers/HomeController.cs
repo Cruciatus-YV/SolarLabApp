@@ -19,64 +19,23 @@ namespace Pozdravlyator.WebApp.Controllers
         public IActionResult Index()
         {
             var users = _userRepository.GetAll();
-            if (!users.Any()) 
-            {
-
-                _userRepository.Create(new User 
-                {
-                    FirstName = "Юрий",
-                    LastName = "Воронкин",
-                    Birthday = new DateTime(1998,9,1),
-                    Adress = "г.Белгород",
-                });
-                _userRepository.Create(new User
-                {
-                    FirstName = "Иван",
-                    LastName = "Рябенко",
-                    Birthday = new DateTime(2000, 1, 14),
-                    Adress = "г.Киев",
-                });
-                _userRepository.Create(new User
-                {
-                    FirstName = "Сергей",
-                    LastName = "Каплий",
-                    Birthday = new DateTime(1998, 7, 11),
-                    Adress = "г.Мурманск",
-                });
-                _userRepository.Create(new User
-                {
-                    FirstName = "Олег",
-                    LastName = "Бочаров",
-                    Birthday = new DateTime(1985, 8, 16),
-                    Adress = "г.Белгород",
-                });
-                users = _userRepository.GetAll();
-            }
-            if (!users.Any(x=>x.Birthday.Month == DateTime.UtcNow.Month && x.Birthday.Day == DateTime.UtcNow.Day))
-            {
-                _userRepository.Create(new User
-                {
-                    FirstName = Guid.NewGuid().ToString(),
-                    LastName = Guid.NewGuid().ToString(),
-                    Birthday = DateTime.UtcNow.Date,
-                    Adress = Guid.NewGuid().ToString(),
-                });
-                users = _userRepository.GetAll();
-            }
+           
             var result = users.GroupBy(x => x.Birthday.Month).Select(x => 
             {
+                var (color, description) = GetColorAndDescription(x.Key);
                 return new MonthWithUsersViewModel
                 {
                     Month = GetMonthName(x.Key),
-                    Color = GetColor(x.Key),
+                    Color = color,
+                    Description = description,
                     Users = x.Select(user => new UserViewModel
                     {
                         Id = user.Id,
                         FirstName = user.FirstName,
                         LastName = user.LastName,
-                        BirthdayString = user.Birthday.ToString("dd.MM.yyyy"),
+                        BirthdayString = user.Birthday.ToString("dd.MM.yyyy г."),
                         Adress = user.Adress,
-
+                        Birthday = user.Birthday.Date,
                     }).ToList(),
                 };
             }).ToList();
@@ -90,7 +49,7 @@ namespace Pozdravlyator.WebApp.Controllers
                 Id = user.Id, 
                 FirstName = user.FirstName, 
                 LastName = user.LastName,
-                BirthdayString = user.Birthday.ToString("dd.MM.yyyy"),
+                BirthdayString = user.Birthday.ToString("yyyy-MM-dd"),
                 Adress = user.Adress,
             };
             return View(model);
@@ -98,12 +57,12 @@ namespace Pozdravlyator.WebApp.Controllers
         [HttpPost]
         public IActionResult Edit(UserViewModel model) 
         {
-            var user = _userRepository.GetById(model.Id);
-            var isBirthdayCorrect = DateTime.TryParseExact(model.BirthdayString, "dd.MM.yyyy", null, DateTimeStyles.None, out var birthday);
+            var user = _userRepository.GetById(model.Id.GetValueOrDefault());
+            var isBirthdayCorrect = DateTime.TryParseExact(model.BirthdayString, "yyyy-MM-dd", null, DateTimeStyles.None, out var birthday);
             
             if (!isBirthdayCorrect)
             {
-                ModelState.First(x => x.Key == nameof(model.BirthdayString)).Value.Errors.Add("Неверный формат даты. День.Месяц.Год");
+                ModelState.First(x => x.Key == nameof(model.BirthdayString)).Value.Errors.Add("Неверный формат даты!");
             }
             if (!ModelState.IsValid) 
                 return View(model);
@@ -114,19 +73,45 @@ namespace Pozdravlyator.WebApp.Controllers
             _userRepository.Update(user);
             return Redirect("/");
         }
+        public IActionResult Add()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult Add(UserViewModel model)
+        {
+            var isBirthdayCorrect = DateTime.TryParseExact(model.BirthdayString, "yyyy-MM-dd", null, DateTimeStyles.None, out var birthday);
+
+            if (!isBirthdayCorrect)
+            {
+                ModelState.First(x => x.Key == nameof(model.BirthdayString)).Value.Errors.Add("Неверный формат даты!");
+            }
+            if (!ModelState.IsValid)
+                return View(model);
+            var newUser = new User
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Adress = model.Adress,
+                Birthday = birthday,
+
+            };
+            _userRepository.Create(newUser);
+            return Redirect("/");
+        }
         [HttpPost]
         public IActionResult Delete(int id)
         {
             _userRepository.Delete(id);
             return Redirect("/");
         }
-        private string GetColor(int month)
+        private (string, string) GetColorAndDescription(int month)
         {
             var currentMonth = DateTime.UtcNow.Month;
-            if (month < currentMonth) return "#f00";
-            else if (month == currentMonth) return "#1ce3ad";
-            else if (month == currentMonth + 1) return "#c867cd";
-            else return "#979797";
+            if (month < currentMonth) return ("#f00", "Прошедшие дни рождения");
+            else if (month == currentMonth) return ("#1ce3ad", "Текущий месяц");
+            else if (month == currentMonth + 1) return ("#c867cd", "Следующий месяц");
+            else return ("#979797", "");
         }
         private string GetMonthName(int month)
         {
