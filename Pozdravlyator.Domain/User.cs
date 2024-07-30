@@ -12,5 +12,7 @@ namespace Pozdravlyator.Domain
         public string LastName { get; set; }
         public string? Adress { get; set; }
         public DateTime Birthday { get; set; }
+        public string? Avatar { get; set; }
+        public string? AvatarExtention { get; set; }
     }
 }

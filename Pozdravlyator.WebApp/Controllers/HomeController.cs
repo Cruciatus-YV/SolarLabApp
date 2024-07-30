@@ -36,21 +36,28 @@ namespace Pozdravlyator.WebApp.Controllers
                         BirthdayString = user.Birthday.ToString("dd.MM.yyyy г."),
                         Adress = user.Adress,
                         Birthday = user.Birthday.Date,
+                        AvatarBase64 = user.Avatar,
+                        AvatarExtention = user.AvatarExtention,
                     }).ToList(),
                 };
             }).ToList();
             return View(result);
         }
+
+        [HttpGet]
         public IActionResult Edit(int id) 
         {
             var user = _userRepository.GetById(id);
-            var model = new UserViewModel 
-            { 
-                Id = user.Id, 
-                FirstName = user.FirstName, 
+            var model = new UserViewModel
+            {
+                Id = user.Id,
+                FirstName = user.FirstName,
                 LastName = user.LastName,
                 BirthdayString = user.Birthday.ToString("yyyy-MM-dd"),
                 Adress = user.Adress,
+                HasAvatar = !string.IsNullOrEmpty(user.Avatar),
+                AvatarBase64 = user.Avatar,
+                AvatarExtention = user.AvatarExtention,
             };
             return View(model);
         }
@@ -64,12 +71,38 @@ namespace Pozdravlyator.WebApp.Controllers
             {
                 ModelState.First(x => x.Key == nameof(model.BirthdayString)).Value.Errors.Add("Неверный формат даты!");
             }
+
+            ModelState.Remove("Avatar");
+
             if (!ModelState.IsValid) 
                 return View(model);
+
             user.FirstName = model.FirstName;
             user.LastName = model.LastName;
             user.Birthday = birthday;
             user.Adress = model.Adress;
+
+            if (model.HasAvatar)
+            {
+                var file = Request.Form.Files["Avatar"];
+
+                if (file != null)
+                {
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        file.CopyTo(memoryStream);
+                        var fileBytes = memoryStream.ToArray();
+                        user.AvatarExtention = Path.GetExtension(file.FileName).Replace(".", "");
+                        user.Avatar = Convert.ToBase64String(fileBytes);
+                    }
+                }
+            }
+            else
+            {
+                user.AvatarExtention = null;
+                user.Avatar = null;
+            }
+
             _userRepository.Update(user);
             return Redirect("/");
         }
@@ -77,6 +110,7 @@ namespace Pozdravlyator.WebApp.Controllers
         {
             return View();
         }
+
         [HttpPost]
         public IActionResult Add(UserViewModel model)
         {
@@ -86,8 +120,12 @@ namespace Pozdravlyator.WebApp.Controllers
             {
                 ModelState.First(x => x.Key == nameof(model.BirthdayString)).Value.Errors.Add("Неверный формат даты!");
             }
+
+            ModelState.Remove("Avatar");
+
             if (!ModelState.IsValid)
                 return View(model);
+
             var newUser = new User
             {
                 FirstName = model.FirstName,
@@ -96,15 +134,30 @@ namespace Pozdravlyator.WebApp.Controllers
                 Birthday = birthday,
 
             };
+
+            var file = Request.Form.Files["Avatar"];
+
+            if (file != null)
+            {
+                using (var memoryStream = new MemoryStream())
+                {
+                    file.CopyTo(memoryStream);
+                    var fileBytes = memoryStream.ToArray();
+                    newUser.AvatarExtention = Path.GetExtension(file.FileName).Replace(".", "");
+                    newUser.Avatar = Convert.ToBase64String(fileBytes);
+                }
+            }
             _userRepository.Create(newUser);
             return Redirect("/");
         }
+
         [HttpPost]
         public IActionResult Delete(int id)
         {
             _userRepository.Delete(id);
             return Redirect("/");
         }
+
         private (string, string) GetColorAndDescription(int month)
         {
             var currentMonth = DateTime.UtcNow.Month;
@@ -113,6 +166,7 @@ namespace Pozdravlyator.WebApp.Controllers
             else if (month == currentMonth + 1) return ("#c867cd", "Следующий месяц");
             else return ("#979797", "");
         }
+
         private string GetMonthName(int month)
         {
             return month == 1 ? "Январь"
@@ -128,6 +182,7 @@ namespace Pozdravlyator.WebApp.Controllers
                 : month == 11 ? "Ноябрь"
                 : "Декабрь";
         }
+
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {
