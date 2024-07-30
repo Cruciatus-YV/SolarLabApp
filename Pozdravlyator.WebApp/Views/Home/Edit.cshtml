@@ -1,15 +1,75 @@
 ﻿@model Pozdravlyator.WebApp.Models.UserViewModel
 @{
-    ViewData["Title"] = "Edit " + Model.GetFullName();
+    ViewData["Title"] = Model.GetFullName()+" - Редактирование";
 }
+
 <style>
     .error{
         color:red;
         font-size:12px;
     }
+
+    #avatar {
+        width: 120px;
+        height: 120px;
+        background-image: url(/img/EmptyAvatar.png);
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
+        border-radius: 50%;
+        border: 1px solid #000;
+    }
+
+    #avatarInput {
+        display: block;
+        width: 0;
+        height: 0;
+    }
+
+    #avatarInput:before {
+        transition: 0.2s;
+        cursor: pointer;
+        opacity: 0;
+        content: "";
+        display: block;
+        position: absolute;
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #dbdbdb;
+        background-image: url(/img/Photo-Camera.png);
+        background-position: center;
+        background-size: 40%;
+        background-repeat: no-repeat;
+    }
+
+    #avatarInput:hover:before {
+        opacity: 0.8;
+    }
+
+    #avatarDelete {
+        padding: 0;
+        border: none;
+        font: inherit;
+        color: inherit;
+        background-color: transparent;
+        cursor: pointer;
+        position: absolute;
+        right: -5px;
+        top: -4px;
+    }
 </style>
-<form action="/home/Edit" method="post">
+
+<form action="/home/Edit" method="post" enctype="multipart/form-data">
     <input hidden asp-for="Id" />
+    <input type="checkbox" hidden id="hasAvatar" asp-for="HasAvatar"/>
+    <div class="form-group mb-2" style="position: relative; width: min-content; margin: 0 auto;">
+        <button type="button" id="avatarDelete" onclick="deleteAvatar()">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#000"><path d="m256-200-56-56 224-224-224-224 56-56 224 224 224-224 56 56-224 224 224 224-56 56-224-224-224 224Z" /></svg>
+        </button>
+        <input asp-for="Avatar" onchange="avatarLoader(this)" id="avatarInput" type="file" accept="image/png, image/PNG, image/jpeg, image/JPEG" />
+        <div style="background-image: @(!string.IsNullOrEmpty(Model.AvatarBase64)? $"url(\"data:image/{Model.AvatarExtention};base64, {Model.AvatarBase64}\")" : "url(/img/EmptyAvatar.png)")" id="avatar"></div>
+    </div>
     <div class="form-group mb-2">
         <label>Имя</label>
         <input type="text" class="form-control" placeholder="Введите имя" asp-for="FirstName" />
@@ -32,3 +92,29 @@
     </div>
     <button class="btn btn-primary mt-3" type="submit">Сохранить</button>
 </form>
+
+<script>
+    function avatarLoader(event) {
+
+        if (!FileReader) {
+            return;
+        }
+
+        if (!event.files.length) {
+            return;
+        }
+
+        var fileReader = new FileReader();
+        fileReader.onload = function () {
+            document.getElementById("avatar").style.backgroundImage = `url('${fileReader.result}')`;
+        }
+
+        fileReader.readAsDataURL(event.files[0]);
+        document.getElementById("hasAvatar").checked = true;
+    }
+    function deleteAvatar() {
+        document.getElementById("avatarInput").value = "";
+        document.getElementById("avatar").style.backgroundImage = `url(/img/EmptyAvatar.png)`;
+        document.getElementById("hasAvatar").checked = false;
+    }
+</script>
