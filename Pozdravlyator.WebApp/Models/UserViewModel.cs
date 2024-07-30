@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Http;
+using System.ComponentModel.DataAnnotations;
 
 namespace Pozdravlyator.WebApp.Models
 {
@@ -147,6 +148,11 @@ namespace Pozdravlyator.WebApp.Models
         [Required(ErrorMessage = "Введите дату!")]
         public string BirthdayString { get; set; }
         public DateTime Birthday { get; set; }
+        public IFormFile Avatar {  get; set; }
+        public string? AvatarBase64 { get; set; }
+        public bool HasAvatar { get; set; }
+        public string? AvatarExtention { get; set; }
+
         public string GetAge()
         {
             DateTime now = DateTime.Today;
@@ -156,10 +162,12 @@ namespace Pozdravlyator.WebApp.Models
             var ageStr = ageStringDict.ContainsKey(age) ? ageStringDict[age] : "лет";
             return $"{age} {ageStr}";
         }
+
         public string GetFullName()
         {
             return $"{FirstName} {LastName}";
         }
+
         public bool IsBirthdayToday()
         {
             return Birthday.Month == DateTime.UtcNow.Month && Birthday.Day == DateTime.UtcNow.Day;
